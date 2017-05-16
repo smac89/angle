@@ -2,6 +2,7 @@
 # encoding: utf-8
 # encoding=utf8  
 
+from __future__ import print_function
 import sys
 import os
 
@@ -4022,47 +4023,56 @@ def ruby_action():
 
 
 def start_shell(args=[]):
-	import readline
+	import readline, itertools
 	context._debug = context._debug or 'ANGLE_DEBUG' in os.environ
 	# context.home=os.environ['ANGLE_HOME']
-	from os.path import expanduser
-	home = expanduser("~")  # WTF
-	readline.read_history_file(home + '/.english_history')
+	from os import path
+	from six.moves import map
+	from six import StringIO
+
+	history_file = path.join(path.expanduser("~"), ".english_history")
+
+	try:
+		with open(history_file, "a"): pass
+	except IOError:
+		with open(history_file, "w"): pass
+
+	readline.read_history_file(history_file)
+
 	if len(args) > 1:
 		input0 = ' '.join(args)
-	else:
-		# input0 = input('⦠ ')
-		input0 = real_raw_input('⦠ ')
-	while True:  # input0:
-		# while input = Readline.readline('angle-script⦠ ', True)
-		readline.write_history_file(home + "/.english_history")
-		# while True
-		#   print("> ")
-		#   input = STDIN.gets.strip()
-		try:
-			# interpretation= parser.parse input
-			interpretation = parse(input0, None)
-			if not interpretation: next
-			# if context.use_tree: print(interpretation.tree)
-			print((interpretation.result))
-		except IgnoreException as e:
-			pass
-		except NotMatching as e:
-			print('Syntax Error')
-		except GivingUp as e:
-			print('Syntax Error')
-		except NameError as e:
-			print('Name Error')
-		except SyntaxError as e:
-			print('Syntax Error')
-		except EOFError as e:
-			break
-		except Exception as e:
-			raise
-		# print(e)
-		# input0 = input("⦠ ")
-		input0 = real_raw_input('⦠ ')
-	print("Bye.")
+		print((">>> %s" % input0))
+		sys.stdin = StringIO(input0)
+	try:
+		for input0 in map(real_raw_input, itertools.repeat("⦠ ")):
+			# while input = Readline.readline('angle-script⦠ ', True)
+			readline.write_history_file(history_file)
+			# while True
+			#   print("> ")
+			#   input = STDIN.gets.strip()
+			try:
+				# interpretation= parser.parse input
+				interpretation = parse(input0, None)
+				if not interpretation: next
+				# if context.use_tree: print(interpretation.tree)
+				print((interpretation.result))
+			except IgnoreException as e:
+				pass
+			except NotMatching as e:
+				print('Syntax Error')
+			except GivingUp as e:
+				print('Syntax Error')
+			except NameError as e:
+				print('Name Error')
+			except SyntaxError as e:
+				print('Syntax Error')
+			# print(e)
+			# input0 = input("⦠ ")
+	except EOFError as e:
+		print("Bye")
+		exit(0)
+	except Exception as e:
+		raise
 	exit(1)
 
 
@@ -4080,7 +4090,6 @@ def main():
 		print("\t./angle (no args for shell)")
 		return start_shell()
 	a = str(ARGV[1])
-	print((">>> %s" % a))
 	if a == "--version" or a == '-version' or a == '-v':
 		print((the.version))
 		return
@@ -4090,12 +4099,13 @@ def main():
 	# all=ARGF.read or File.read(a) except a
 	target_file = None
 	try:
-		interpretation = parse(a.decode('utf-8'), target_file)
-		# interpretation = parse(a.encode('utf-8'), target_file)
-		if context.use_tree: print((interpretation.tree))
-		if the.result and not not the.result and not the.result == Nil:
-			print((the.result))
-		if not target_file: start_shell()
+		# interpretation = parse(a.decode('utf-8'), target_file)
+		# # interpretation = parse(a.encode('utf-8'), target_file)
+		# if context.use_tree: print((interpretation.tree))
+		# if the.result and not not the.result and not the.result == Nil:
+		# 	print((the.result))
+		# if not target_file: start_shell()
+		start_shell(a.split())
 	except NotMatching as e:
 		print(e)
 		print('Syntax Error')
